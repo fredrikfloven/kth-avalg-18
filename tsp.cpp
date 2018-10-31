@@ -26,6 +26,7 @@ void print(vector<vector<double> > matrix){
     cout << "\n";
 }
 
+//Read values and create distanceMatrix for the nodes.
 vector<vector<double>> init(){
  //Retrieve all the nodes as a vector of tuples
     //Node 0 is the 0th node in the vector, node 1 is the 1st vectors etc.
@@ -56,6 +57,7 @@ vector<vector<double>> init(){
     return distanceMatrix;
 }
 
+//Return value from distanceMatrix
 double getDist(int i, int j){
     if(i <0 || j < 0 || i > distanceMatrix.size() || j > distanceMatrix.size()){
         cerr << "dist function, nodes out of bounds";
@@ -63,10 +65,9 @@ double getDist(int i, int j){
     return distanceMatrix[i][j];
 }
 
-double getChange(int i, int j){
-    int modi = (i+1) % distanceMatrix.size();
-    int modj = (j+1) % distanceMatrix.size();
-    double change = getDist(i, j) + getDist(modi, modj) - getDist(i, modi) - getDist(j, modj);
+//help function for 2-opt
+double getChange(int i, int j, int iplus, int jplus){
+    double change = getDist(i, j) + getDist(iplus, jplus) - getDist(i, iplus) - getDist(j, jplus);
     return change;
 }
 
@@ -79,11 +80,14 @@ vector<int> twoOpt(vector<int> path){
     int killLoop = 0;
 
     do{
+        //check if two edges are worth swapping
         minChange = 0;
         for (int i = 0; i < nodes-2; ++i){
             for (int j = i+2; j < nodes; ++j){
-                double change = getChange(path[i], path[j]);
-                if (minChange > change){
+                int iplus = (i+1) % nodes;    //
+                int jplus = (j+1) % nodes;    // close the circle, if j = length then j+1 should be index 0
+                double change = getChange(path[i], path[j], path[iplus], path[jplus]);
+                if (minChange > change){    
                     minChange = change;
                     mini = i; minj = j;
                 }
@@ -101,35 +105,74 @@ vector<int> twoOpt(vector<int> path){
             path[i] = s.top();
             s.pop();
         }
-
+        //set a limit on iterations
         ++killLoop;
-    } while(minChange < 0 && killLoop <= 100);
+    } while(minChange < 0 && killLoop < 100);
 
     return path;
 }
 
+vector<int> nearestNeighbor(int nodes){
+    int current = 0;
+    vector<int> returnPath;
+    vector<bool> visited = vector<bool>(nodes);
+    
+    returnPath.push_back(current);
+    visited[current] = true;
+
+    do{
+        double min = INT8_MAX; 
+        int mini = 0;
+        for (int i = 0; i < nodes; ++i){
+            double dist = distanceMatrix[current][i];
+            if(dist < min && (visited[i] != true)){
+                min = dist;
+                mini = i;
+            }
+        }
+        current = mini;
+        returnPath.push_back(current);
+        visited[current] = true;    
+    }while(returnPath.size() < nodes);
+
+    return returnPath;
+}
+
+//initialize random paths
+vector<int> randomPath(vector<int> path){
+    random_shuffle(path.begin(), path.end());
+    return path;
+}
+
+
+
 int main(){
     distanceMatrix = init();
-
+    // print(distanceMatrix);
     int nodes = distanceMatrix.size(); 
-    vector<int> path = vector<int>(nodes);
 
-    for (int i = 0; i < path.size(); ++i){
-        path[i] = i;
-    }
-
-    // if small graph
+    // if small graph, quickly output
     if(nodes <= 3){
-        for (int i = 0; i < path.size(); ++i){
-            cout << path[i] << "\n";
+        for (int i = 0; i < nodes; ++i){
+            cout << i << "\n";
         }
         return 0;
     }
-    
-    //do 2-opt
+
+    // set a path to input order
+    vector<int> initPath;
+    for (int i = 0; i < nodes; ++i){
+        initPath.push_back(i);
+    }
+
+    // vector<int> path = randomPath(initPath);
+    // vector<int> path = nearestNeighbor(nodes);
+    vector<int> path = initPath;
+
+    // do 2-opt
     vector<int> result = twoOpt(path);
 
-    //print out result
+    // print out result
     for (int i = 0; i < result.size(); ++i){
         cout << result[i] << "\n";
     }
