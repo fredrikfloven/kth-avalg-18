@@ -107,7 +107,7 @@ vector<int> twoOpt(vector<int> path){
         }
         //set a limit on iterations
         ++killLoop;
-    } while(minChange < 0 && killLoop < 100);
+    } while(minChange < 0 && killLoop < 220);
 
     return path;
 }
@@ -138,6 +138,42 @@ vector<int> nearestNeighbor(int nodes){
     return returnPath;
 }
 
+
+vector<int> greedyAlgorithm(){
+    int nodes = distanceMatrix.size();
+    vector<int> tour = vector<int>(nodes);
+    vector<bool> used = vector<bool>(nodes);
+    int best;
+
+    tour[0] = 0;
+    used[0] = true;
+
+    //error om best = -1?
+    for (int i = 1; i < nodes; ++i){
+        best = -1;
+        for (int j = 0; j < nodes; ++j){
+
+            if (!used[j] && best == -1){
+                best = j;
+
+            }else if(distanceMatrix[tour[i-1]][j] < distanceMatrix[tour[i-1]][best] && !used[j]){
+                best = j;
+            }
+        }
+        tour[i] = best;
+        used[best] = true;
+    }
+
+    // cout << "\n";
+    // for (int i = 0; i < tour.size(); ++i){
+    //     cout << tour[i] << " ";
+    // }
+    // cout << "\n";
+
+    return tour;
+}
+
+
 //initialize random paths
 vector<int> randomPath(vector<int> path){
     random_shuffle(path.begin(), path.end());
@@ -159,17 +195,20 @@ int main(){
         return 0;
     }
 
-    // set a path to input order
-    vector<int> initPath;
-    for (int i = 0; i < nodes; ++i){
-        initPath.push_back(i);
-    }
 
-    // vector<int> path = randomPath(initPath);
-    // vector<int> path = nearestNeighbor(nodes);
-    vector<int> path = initPath;
+    vector<int> path =  greedyAlgorithm();
 
-    // do 2-opt
+    // // set a path to input order
+    // vector<int> initPath;
+    // for (int i = 0; i < nodes; ++i){
+    //     initPath.push_back(i);
+    // }
+
+    // // vector<int> path = randomPath(initPath);
+    // // vector<int> path = nearestNeighbor(nodes);
+    // vector<int> path = initPath;
+
+    // // do 2-opt
     vector<int> result = twoOpt(path);
 
     // print out result
