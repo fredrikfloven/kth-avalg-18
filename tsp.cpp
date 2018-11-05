@@ -30,10 +30,10 @@ void print(vector<vector<double> > matrix){
 vector<vector<double>> init(){
  //Retrieve all the nodes as a vector of tuples
     //Node 0 is the 0th node in the vector, node 1 is the 1st vectors etc.
-    int points; //N - nodes
-    cin >> points;
+    int N; //N - nodes
+    cin >> N;
     vector < tuple <double, double> > v; // v: vector with all coordinate tuples [(x1,y1), (x2,y2), ... ]
-    for(int i = 0; i < points; i++){
+    for(int i = 0; i < N; i++){
         double value1, value2;
         cin >> value1 >> value2;
         auto foo = make_tuple(value1,value2);
@@ -41,11 +41,11 @@ vector<vector<double>> init(){
     }
 
     //Build a NxN matrix consisting of all the routes/distances from each node to all the others (Euclidian distance)
-    vector < vector <double> > distanceMatrix(points);
-    for(int i = 0; i < points; i++){
+    vector < vector <double> > distanceMatrix(N);
+    for(int i = 0; i < N; i++){
         double x = get<0>(v[i]);
         double y = get<1>(v[i]);
-        for(int j = 0; j < points; j++){
+        for(int j = 0; j < N; j++){
             double xOther = get<0>(v[j]);
             double yOther = get<1>(v[j]);
             double xDist = pow(abs(x-xOther),2);
@@ -59,7 +59,7 @@ vector<vector<double>> init(){
 
 //Return value from distanceMatrix
 double getDist(int i, int j){
-    if(i <0 || j < 0 || i > distanceMatrix.size() || j > distanceMatrix.size()){
+    if(i < 0 || j < 0 || i > distanceMatrix.size() || j > distanceMatrix.size()){
         cerr << "dist function, nodes out of bounds";
     }
     return distanceMatrix[i][j];
@@ -71,6 +71,14 @@ double getChange(int i, int j, int iplus, int jplus){
     return change;
 }
 
+double lengthOfPath(vector<int> route){
+    double sum;
+    for(int i = 0; i < route.size()-1; i++){
+        sum += distanceMatrix[route[i]][route[i+1]];
+    }
+    sum += distanceMatrix[route[0]][route[route.size()-1]];
+    return sum;
+}
 
 vector<int> twoOpt(vector<int> path){
     int nodes = distanceMatrix.size(); 
@@ -107,8 +115,10 @@ vector<int> twoOpt(vector<int> path){
         }
         //set a limit on iterations
         ++killLoop;
-    } while(minChange < 0 && killLoop < 220);
+        
+        //cout << lengthOfPath(path);
 
+    } while(minChange < 0 && killLoop < 220);
     return path;
 }
 
@@ -134,6 +144,7 @@ vector<int> nearestNeighbor(int nodes){
         returnPath.push_back(current);
         visited[current] = true;    
     }while(returnPath.size() < nodes);
+
 
     return returnPath;
 }
@@ -197,6 +208,11 @@ int main(){
 
 
     vector<int> path =  greedyAlgorithm();
+    // print out greedy path
+    //cout << "\n" << "greedy" << "\n";
+    // for (int i = 0; i < path.size(); ++i){
+    //     cout << path[i] << "\n";
+    // }
 
     // // set a path to input order
     // vector<int> initPath;
@@ -212,8 +228,14 @@ int main(){
     vector<int> result = twoOpt(path);
 
     // print out result
+    //cout << "\n" << "twoOpt" << "\n";
+
     for (int i = 0; i < result.size(); ++i){
         cout << result[i] << "\n";
     }
+
+    //print path lengths
+    //cout << "greedy: " << "lengthOfPath(path) << "\n";
+    //cout << "2opt: " << "lengthOfPath(result) << "\n";
 
 }
